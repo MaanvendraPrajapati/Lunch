@@ -44,6 +44,94 @@
     pointer-events:none;
   }
 
+  /* ---------- HOW WE GOT HERE ---------- */
+
+.timeline-section{
+  min-height:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:80px 24px;
+  gap:10px;
+}
+
+.timeline-section h2{
+  font-size:clamp(26px,4vw,42px);
+  font-weight:700;
+  letter-spacing:-0.02em;
+  margin:0 0 36px;
+  text-align:center;
+}
+
+.timeline{
+  position:relative;
+  width:min(430px,100%);
+  padding-left:30px;
+}
+
+.timeline::before{
+  content:"";
+  position:absolute;
+  left:6px;
+  top:6px;
+  bottom:6px;
+  width:1.5px;
+  background:linear-gradient(
+    180deg,
+    rgba(255,255,255,.35),
+    rgba(255,255,255,.05)
+  );
+}
+
+.t-item{
+  position:relative;
+  padding-bottom:28px;
+  opacity:0;
+  transform:translateX(-10px);
+  transition:opacity .5s ease, transform .5s ease;
+}
+
+.t-item.show{
+  opacity:1;
+  transform:translateX(0);
+}
+
+.t-item::before{
+  content:"";
+  position:absolute;
+  left:-30px;
+  top:4px;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--teal);
+  box-shadow:0 0 8px var(--teal);
+}
+
+.t-item.today::before{
+  background:var(--gold);
+  box-shadow:0 0 10px rgba(242,184,75,.7);
+}
+
+.t-item .month{
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  margin-bottom:4px;
+}
+
+.t-item .quote{
+  font-size:15px;
+  color:var(--text);
+}
+
+.t-item.today .quote{
+  color:var(--gold);
+  font-weight:700;
+}
+
   .orb{
     position:fixed;
     border-radius:50%;
@@ -485,6 +573,44 @@
     font-family:inherit;
   }
 
+  .name-input{
+    width:100%;
+    background:rgba(255,255,255,0.07);
+    border:1px solid var(--glass-border);
+    color:var(--text);
+    font-family:inherit;
+    font-size:15px;
+    padding:13px 16px;
+    border-radius:14px;
+    outline:none;
+    margin-bottom:14px;
+    transition:border-color 0.2s ease, background 0.2s ease;
+  }
+  .name-input::placeholder{ color:var(--text-dim); }
+  .name-input:focus{ border-color:var(--gold); background:rgba(255,255,255,0.1); }
+
+  .btn-submit{
+    background:linear-gradient(180deg, var(--gold), #D99A2B);
+    color:#3A2600;
+    border:none;
+    border-radius:100px;
+    padding:12px 30px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+    width:100%;
+  }
+  .btn-submit:disabled{ opacity:0.6; cursor:default; }
+
+  .name-status{
+    font-size:12.5px;
+    color:var(--text-dim);
+    min-height:16px;
+    margin-top:12px;
+  }
+  .name-status.error{ color:var(--pink); }
+
   canvas#confetti{
     position:fixed;
     inset:0;
@@ -498,6 +624,7 @@
     .invite-card{ padding:32px 22px 28px; }
     .arena{ height:160px; }
   }
+
 </style>
 </head>
 <body>
@@ -518,9 +645,51 @@
   <div class="scroll-cue">Scroll to accept your fate<div class="chevron"></div></div>
 </section>
 
+<!-- HOW WE GOT HERE -->
+<section class="timeline-section">
+  <h2>How we got here.</h2>
+
+  <div class="timeline" id="timeline">
+    <div class="t-item">
+      <div class="month">January</div>
+      <div class="quote">"We should plan something."</div>
+    </div>
+
+    <div class="t-item">
+      <div class="month">February</div>
+      <div class="quote">"After release."</div>
+    </div>
+
+    <div class="t-item">
+      <div class="month">March</div>
+      <div class="quote">"Maybe next month."</div>
+    </div>
+
+    <div class="t-item">
+      <div class="month">April</div>
+      <div class="quote">"Too many deployments."</div>
+    </div>
+
+    <div class="t-item">
+      <div class="month">May</div>
+      <div class="quote">"Let's revisit."</div>
+    </div>
+
+    <div class="t-item">
+      <div class="month">June</div>
+      <div class="quote">"Still discussing."</div>
+    </div>
+
+    <div class="t-item today">
+      <div class="month">Today</div>
+      <div class="quote">Enough.</div>
+    </div>
+  </div>
+</section>
+
 <!-- FEATURES -->
 <section class="features">
-  <h2>What's included.</h2>
+  <h2>What's the plan.</h2>
   <div class="chip-row">
     <div class="chip">25 Attendees</div>
     <div class="chip">1 Weekend</div>
@@ -588,6 +757,18 @@
 
   </div>
 </section>
+
+<!-- NAME CAPTURE MODAL -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal-card">
+    <div class="big-check">✍️</div>
+    <h2>Before we celebrate...</h2>
+    <p>What's your name? We're keeping a list of who's actually in.</p>
+    <input type="text" class="name-input" id="nameInput" placeholder="Your name" autocomplete="name" maxlength="60">
+    <button class="btn-submit" id="submitNameBtn">Confirm — I'm in</button>
+    <div class="name-status" id="nameStatus">&nbsp;</div>
+  </div>
+</div>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
@@ -958,10 +1139,94 @@
     }, 700);
   }
 
+  /* ---------------- NAME CAPTURE + FORMSPREE ---------------- */
+  // Replace YOUR_FORM_ID below with your own Formspree endpoint (formspree.io -> New Form -> copy the endpoint).
+  const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mzdlyqql';
+
+  const nameModal = document.getElementById('nameModal');
+  const nameInput = document.getElementById('nameInput');
+  const submitNameBtn = document.getElementById('submitNameBtn');
+  const nameStatus = document.getElementById('nameStatus');
+
   yesBtn.addEventListener('click', () => {
+    nameModal.classList.add('show');
+    nameStatus.textContent = '\u00A0';
+    nameStatus.classList.remove('error');
+    setTimeout(() => nameInput.focus(), 200);
+  });
+
+  async function submitName(){
+    const name = nameInput.value.trim();
+    if (!name){
+      nameStatus.textContent = 'Please enter your name first.';
+      nameStatus.classList.add('error');
+      nameInput.focus();
+      return;
+    }
+
+    submitNameBtn.disabled = true;
+    nameStatus.classList.remove('error');
+    nameStatus.textContent = 'Recording your response...';
+
+    try {
+      await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          name: name,
+          response: 'Yes',
+          respondedAt: new Date().toISOString(),
+          page: 'Team AMER Annual Survival Summit'
+        })
+      });
+    } catch (err) {
+      console.error('Formspree submission failed:', err);
+      // We still let the celebration proceed below - a failed email
+      // shouldn't block someone's "yes" from feeling like a yes.
+    }
+
+    submitNameBtn.disabled = false;
+    nameModal.classList.remove('show');
     burstConfetti();
     startPostYesSequence();
+  }
+
+  submitNameBtn.addEventListener('click', submitName);
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitName();
   });
+
+  /* ---------------- TIMELINE ---------------- */
+
+const timelineItems = document.querySelectorAll(".t-item");
+let timelineAnimated = false;
+
+function animateTimeline() {
+
+    if (timelineAnimated) return;
+
+    const section = document.querySelector(".timeline-section");
+
+    if (!section) return;
+
+    const rect = section.getBoundingClientRect();
+
+    if (rect.top < window.innerHeight * 0.8) {
+
+        timelineAnimated = true;
+
+        timelineItems.forEach((item, index) => {
+
+            setTimeout(() => {
+                item.classList.add("show");
+            }, index * 150);
+
+        });
+    }
+}
+
+window.addEventListener("scroll", animateTimeline);
+window.addEventListener("load", animateTimeline);
 
 })();
 </script>
